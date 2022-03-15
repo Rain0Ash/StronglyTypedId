@@ -73,6 +73,22 @@ namespace StronglyTypedIds
             var useIEquatable = implementations.IsSet(StronglyTypedIdImplementations.IEquatable);
             var useIComparable = implementations.IsSet(StronglyTypedIdImplementations.IComparable);
 
+            var implicitFrom = implementations.IsSet(StronglyTypedIdImplementations.ImplicitFrom);
+            var implicitTo = implementations.IsSet(StronglyTypedIdImplementations.ImplicitTo);
+
+            var explicitFrom = implementations.IsSet(StronglyTypedIdImplementations.ExplicitFrom);
+            var explicitTo = implementations.IsSet(StronglyTypedIdImplementations.ExplicitTo);
+
+            if (implicitFrom && explicitFrom)
+            {
+                throw new ArgumentException("Implicit from & Explicit from are mutually exclusive - generated code causes 'Duplicate user-defined conversion in type'", nameof(implementations));
+            }
+
+            if (implicitTo && explicitTo)
+            {
+                throw new ArgumentException("Implicit fromto & Explicit to are mutually exclusive - generated code causes 'Duplicate user-defined conversion in type'", nameof(implementations));
+            }
+
             var parentsCount = 0;
 
             sb ??= new StringBuilder();
@@ -126,6 +142,26 @@ namespace StronglyTypedIds
             ReplaceInterfaces(sb, useIEquatable, useIComparable);
 
             // IEquatable is already implemented whether or not the interface is implemented
+
+            if (implicitFrom)
+            {
+                sb.AppendLine(resources.ImplicitFrom);
+            }
+
+            if (implicitTo)
+            {
+                sb.AppendLine(resources.ImplicitTo);
+            }
+
+            if (explicitFrom)
+            {
+                sb.AppendLine(resources.ExplicitFrom);
+            }
+
+            if (explicitTo)
+            {
+                sb.AppendLine(resources.ExplicitTo);
+            }
 
             if (useIComparable)
             {
