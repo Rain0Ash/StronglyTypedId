@@ -122,6 +122,8 @@ internal static class Parser
                 StronglyTypedIdBackingType backingType = StronglyTypedIdBackingType.Default;
                 StronglyTypedIdConverter converter = StronglyTypedIdConverter.Default;
                 StronglyTypedIdImplementations implementations = StronglyTypedIdImplementations.Default;
+                StronglyTypedIdConversionOperator fromOperator = StronglyTypedIdConversionOperator.None;
+                StronglyTypedIdConversionOperator toOperator = StronglyTypedIdConversionOperator.None;
 
                 if (!attribute.ConstructorArguments.IsEmpty)
                 {
@@ -139,6 +141,12 @@ internal static class Parser
 
                     switch (args.Length)
                     {
+                        case 5:
+                            toOperator = (StronglyTypedIdConversionOperator)args[4].Value!;
+                            goto case 4;
+                        case 4:
+                            fromOperator = (StronglyTypedIdConversionOperator)args[3].Value!;
+                            goto case 3;
                         case 3:
                             implementations = (StronglyTypedIdImplementations)args[2].Value!;
                             goto case 2;
@@ -170,8 +178,14 @@ internal static class Parser
                                 case "converters":
                                     converter = (StronglyTypedIdConverter)typedConstant.Value!;
                                     break;
+                                case "fromOperator":
+                                    fromOperator = (StronglyTypedIdConversionOperator)typedConstant.Value!;
+                                    break;
                                 case "implementations":
                                     implementations = (StronglyTypedIdImplementations)typedConstant.Value!;
+                                    break;
+                                case "toOperator":
+                                    toOperator = (StronglyTypedIdConversionOperator)typedConstant.Value!;
                                     break;
                             }
                         }
@@ -201,7 +215,17 @@ internal static class Parser
                     reportDiagnostic(InvalidImplementationsDiagnostic.Create(structDeclarationSyntax));
                 }
 
-                config = new StronglyTypedIdConfiguration(backingType, converter, implementations);
+                if (!Enum.IsDefined(typeof(StronglyTypedIdConversionOperator), fromOperator))
+                {
+                    reportDiagnostic(InvalidBackingTypeDiagnostic.Create(structDeclarationSyntax));
+                }
+
+                if (!Enum.IsDefined(typeof(StronglyTypedIdConversionOperator), toOperator))
+                {
+                    reportDiagnostic(InvalidBackingTypeDiagnostic.Create(structDeclarationSyntax));
+                }
+
+                config = new StronglyTypedIdConfiguration(backingType, converter, implementations, fromOperator, toOperator);
                 break;
             }
 
@@ -269,6 +293,8 @@ internal static class Parser
             StronglyTypedIdBackingType backingType = StronglyTypedIdBackingType.Default;
             StronglyTypedIdConverter converter = StronglyTypedIdConverter.Default;
             StronglyTypedIdImplementations implementations = StronglyTypedIdImplementations.Default;
+            StronglyTypedIdConversionOperator fromOperator = StronglyTypedIdConversionOperator.None;
+            StronglyTypedIdConversionOperator toOperator = StronglyTypedIdConversionOperator.None;
             bool hasMisconfiguredInput = false;
 
             if (!attribute.ConstructorArguments.IsEmpty)
@@ -287,6 +313,12 @@ internal static class Parser
 
                 switch (args.Length)
                 {
+                    case 5:
+                        toOperator = (StronglyTypedIdConversionOperator)args[4].Value!;
+                        goto case 4;
+                    case 4:
+                        fromOperator = (StronglyTypedIdConversionOperator)args[3].Value!;
+                        goto case 3;
                     case 3:
                         implementations = (StronglyTypedIdImplementations)args[2].Value!;
                         goto case 2;
@@ -318,8 +350,14 @@ internal static class Parser
                             case "converters":
                                 converter = (StronglyTypedIdConverter)typedConstant.Value!;
                                 break;
+                            case "fromOperator":
+                                fromOperator = (StronglyTypedIdConversionOperator)typedConstant.Value!;
+                                break;
                             case "implementations":
                                 implementations = (StronglyTypedIdImplementations)typedConstant.Value!;
+                                break;
+                            case "toOperator":
+                                toOperator = (StronglyTypedIdConversionOperator)typedConstant.Value!;
                                 break;
                         }
                     }
@@ -360,7 +398,25 @@ internal static class Parser
                 }
             }
 
-            return new StronglyTypedIdConfiguration(backingType, converter, implementations);
+            if (!Enum.IsDefined(typeof(StronglyTypedIdConversionOperator), fromOperator))
+            {
+                syntax ??= attribute.ApplicationSyntaxReference?.GetSyntax();
+                if (syntax is not null)
+                {
+                    reportDiagnostic(InvalidBackingTypeDiagnostic.Create(syntax));
+                }
+            }
+
+            if (!Enum.IsDefined(typeof(StronglyTypedIdConversionOperator), toOperator))
+            {
+                syntax ??= attribute.ApplicationSyntaxReference?.GetSyntax();
+                if (syntax is not null)
+                {
+                    reportDiagnostic(InvalidBackingTypeDiagnostic.Create(syntax));
+                }
+            }
+
+            return new StronglyTypedIdConfiguration(backingType, converter, implementations, fromOperator, toOperator);
         }
 
         return null;

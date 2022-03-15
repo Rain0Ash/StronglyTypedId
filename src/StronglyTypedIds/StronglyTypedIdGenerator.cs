@@ -76,6 +76,8 @@ namespace StronglyTypedIds
                         values.Converters,
                         values.BackingType,
                         values.Implementations,
+                        values.FromOperator,
+                        values.ToOperator,
                         sb);
                     context.AddSource(idToGenerate.Name + ".g.cs", SourceText.From(result, Encoding.UTF8));
                 }

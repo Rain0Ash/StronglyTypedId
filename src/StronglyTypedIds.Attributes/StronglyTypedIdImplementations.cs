@@ -33,25 +33,5 @@ namespace StronglyTypedIds
         /// Implement the <see cref="IComparable{T}"/> interface
         /// </summary>
         IComparable = 4,
-
-        /// <summary>
-        /// Implement implicit conversion operator from source type. Mutually exclusive with <see cref="StronglyTypedIdImplementations.ExplicitFrom"/>.
-        /// </summary>
-        ImplicitFrom = 8,
-
-        /// <summary>
-        /// Implement implicit conversion operator to source type. Mutually exclusive with <see cref="StronglyTypedIdImplementations.ExplicitTo"/>.
-        /// </summary>
-        ImplicitTo = 16,
-
-        /// <summary>
-        /// Implement explicit conversion operator from source type. Mutually exclusive with <see cref="StronglyTypedIdImplementations.ImplicitFrom"/>.
-        /// </summary>
-        ExplicitFrom = 32,
-
-        /// <summary>
-        /// Implement explicit conversion operator to source type. Mutually exclusive with <see cref="StronglyTypedIdImplementations.ImplicitTo"/>.
-        /// </summary>
-        ExplicitTo = 64,
     }
 }

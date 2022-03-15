@@ -12,8 +12,10 @@ namespace StronglyTypedIds
             ParentClass? parentClass,
             StronglyTypedIdConverter converters,
             StronglyTypedIdBackingType backingType,
-            StronglyTypedIdImplementations implementations)
-            => CreateId(idNamespace, idName, parentClass, converters, backingType, implementations, null);
+            StronglyTypedIdImplementations implementations,
+            StronglyTypedIdConversionOperator fromOperator,
+            StronglyTypedIdConversionOperator toOperator)
+            => CreateId(idNamespace, idName, parentClass, converters, backingType, implementations, fromOperator, toOperator, null);
 
         public static string CreateId(
             string idNamespace,
@@ -22,6 +24,8 @@ namespace StronglyTypedIds
             StronglyTypedIdConverter converters,
             StronglyTypedIdBackingType backingType,
             StronglyTypedIdImplementations implementations,
+            StronglyTypedIdConversionOperator fromOperator,
+            StronglyTypedIdConversionOperator toOperator,
             StringBuilder? sb)
         {
             var resources = backingType switch
@@ -35,7 +39,7 @@ namespace StronglyTypedIds
                 _ => throw new ArgumentException("Unknown backing type: " + backingType, nameof(backingType)),
             };
 
-            return CreateId(idNamespace, idName, parentClass, converters, implementations, resources, sb);
+            return CreateId(idNamespace, idName, parentClass, converters, implementations, fromOperator, toOperator, resources, sb);
         }
 
         static string CreateId(
@@ -44,6 +48,8 @@ namespace StronglyTypedIds
             ParentClass? parentClass,
             StronglyTypedIdConverter converters,
             StronglyTypedIdImplementations implementations,
+            StronglyTypedIdConversionOperator fromOperator,
+            StronglyTypedIdConversionOperator toOperator,
             EmbeddedSources.ResourceCollection resources,
             StringBuilder? sb)
         {
@@ -72,22 +78,6 @@ namespace StronglyTypedIds
 
             var useIEquatable = implementations.IsSet(StronglyTypedIdImplementations.IEquatable);
             var useIComparable = implementations.IsSet(StronglyTypedIdImplementations.IComparable);
-
-            var implicitFrom = implementations.IsSet(StronglyTypedIdImplementations.ImplicitFrom);
-            var implicitTo = implementations.IsSet(StronglyTypedIdImplementations.ImplicitTo);
-
-            var explicitFrom = implementations.IsSet(StronglyTypedIdImplementations.ExplicitFrom);
-            var explicitTo = implementations.IsSet(StronglyTypedIdImplementations.ExplicitTo);
-
-            if (implicitFrom && explicitFrom)
-            {
-                throw new ArgumentException("Implicit from & Explicit from are mutually exclusive - generated code causes 'Duplicate user-defined conversion in type'", nameof(implementations));
-            }
-
-            if (implicitTo && explicitTo)
-            {
-                throw new ArgumentException("Implicit fromto & Explicit to are mutually exclusive - generated code causes 'Duplicate user-defined conversion in type'", nameof(implementations));
-            }
 
             var parentsCount = 0;
 
@@ -142,25 +132,23 @@ namespace StronglyTypedIds
             ReplaceInterfaces(sb, useIEquatable, useIComparable);
 
             // IEquatable is already implemented whether or not the interface is implemented
-
-            if (implicitFrom)
+            switch (fromOperator)
             {
-                sb.AppendLine(resources.ImplicitFrom);
+                case StronglyTypedIdConversionOperator.Explicit:
+                    sb.AppendLine(resources.ExplicitFrom);
+                    break;
+                case StronglyTypedIdConversionOperator.Implicit:
+                    sb.AppendLine(resources.ImplicitFrom);
+                    break;
             }
-
-            if (implicitTo)
+            switch (toOperator)
             {
-                sb.AppendLine(resources.ImplicitTo);
-            }
-
-            if (explicitFrom)
-            {
-                sb.AppendLine(resources.ExplicitFrom);
-            }
-
-            if (explicitTo)
-            {
-                sb.AppendLine(resources.ExplicitTo);
+                case StronglyTypedIdConversionOperator.Explicit:
+                    sb.AppendLine(resources.ExplicitTo);
+                    break;
+                case StronglyTypedIdConversionOperator.Implicit:
+                    sb.AppendLine(resources.ImplicitTo);
+                    break;
             }
 
             if (useIComparable)

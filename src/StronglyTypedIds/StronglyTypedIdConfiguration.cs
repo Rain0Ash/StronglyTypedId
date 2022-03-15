@@ -7,16 +7,24 @@ namespace StronglyTypedIds
 
         public StronglyTypedIdConverter Converters { get; }
 
+        public StronglyTypedIdConversionOperator FromOperator { get; }
+
         public StronglyTypedIdImplementations Implementations { get; }
+
+        public StronglyTypedIdConversionOperator ToOperator { get; }
 
         public StronglyTypedIdConfiguration(
             StronglyTypedIdBackingType backingType,
             StronglyTypedIdConverter converters,
-            StronglyTypedIdImplementations implementations)
+            StronglyTypedIdImplementations implementations,
+            StronglyTypedIdConversionOperator fromOperator,
+            StronglyTypedIdConversionOperator toOperator)
         {
             BackingType = backingType;
             Converters = converters;
+            FromOperator = fromOperator;
             Implementations = implementations;
+            ToOperator = toOperator;
         }
 
         /// <summary>
@@ -27,7 +35,9 @@ namespace StronglyTypedIds
         public static readonly StronglyTypedIdConfiguration Defaults = new(
             backingType: StronglyTypedIdBackingType.Guid,
             converters: StronglyTypedIdConverter.TypeConverter | StronglyTypedIdConverter.NewtonsoftJson,
-            implementations: StronglyTypedIdImplementations.IEquatable | StronglyTypedIdImplementations.IComparable);
+            implementations: StronglyTypedIdImplementations.IEquatable | StronglyTypedIdImplementations.IComparable,
+            fromOperator: StronglyTypedIdConversionOperator.None,
+            toOperator: StronglyTypedIdConversionOperator.None);
 
         /// <summary>
         /// Combines multiple <see cref="StronglyTypedIdConfiguration"/> values associated
@@ -62,7 +72,23 @@ namespace StronglyTypedIds
                 (var specificValue, _) => specificValue
             };
 
-            return new StronglyTypedIdConfiguration(backingType, converter, implementations);
+            var fromOperator = (attributeValues.FromOperator, globalValues?.FromOperator) switch
+            {
+                (StronglyTypedIdConversionOperator.None, null) => Defaults.FromOperator,
+                (StronglyTypedIdConversionOperator.None, StronglyTypedIdConversionOperator.None) => Defaults.FromOperator,
+                (StronglyTypedIdConversionOperator.None, var globalDefault) => globalDefault.Value,
+                (var specificValue, _) => specificValue
+            };
+
+            var toOperator = (attributeValues.ToOperator, globalValues?.ToOperator) switch
+            {
+                (StronglyTypedIdConversionOperator.None, null) => Defaults.ToOperator,
+                (StronglyTypedIdConversionOperator.None, StronglyTypedIdConversionOperator.None) => Defaults.ToOperator,
+                (StronglyTypedIdConversionOperator.None, var globalDefault) => globalDefault.Value,
+                (var specificValue, _) => specificValue
+            };
+
+            return new StronglyTypedIdConfiguration(backingType, converter, implementations, fromOperator, toOperator);
         }
     }
 }
