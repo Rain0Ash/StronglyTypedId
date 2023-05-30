@@ -76,6 +76,8 @@ namespace StronglyTypedIds
                         values.Converters,
                         values.BackingType,
                         values.Implementations,
+                        values.FromOperator,
+                        values.ToOperator,
                         sb);
                     var fileName = SourceGenerationHelper.CreateSourceName(
                         idToGenerate.NameSpace,
